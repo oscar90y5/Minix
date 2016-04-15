@@ -46,10 +46,17 @@ Buscando la lista de procesos. Encontramos la estructura de la lista de procesos
 Creamos una funcion llamada imprimeTabSeg en main.c
 recorremos la tabla de los procesos y probamos a iprimir el pid de los procesos para ver si funciona.
 Error. No arranca minix :(
-Creamos una funcion llamada imprimeTabSeg en main.c
-recorremos la tabla de los procesos y probamos a iprimir el pid de los procesos para ver si funciona.
-Error. No arranca minix :(
 Explicacion: recorrimos el array has encontrar NIL_MPROC. Esto no se encontraba nunca asique entrabamos en un bucle que no terminaba.
 Conseguimos imprimir la tabla de segmentos de todos los procesos en uso recorriendo el array hasta NR_PROC e imprimimos solo los que tienen "mp_flags" con el valor IN_USE.
 Creamos un programa llamado memLibre.c desde el que haremos una llamada al sistema
 movemos el ejecutable de este programa a la carpeta /usr/local/bin/ para poder ejecutarlo como un comando
+Definimos en callnr.h la nueva llamada al sistema (TABSEG) 
+En utility.c, donde definimos do_esops incluimos un nuevo caso al switch en el que llamara a la funcion imprimeTabVec definida con anterioridad. 
+Hacemos un programa en c que haga esta llamada al sistema, 
+Definimos una nueva llamada al sistema (MITABSEG) que imprima la tabla de segmentos del proceso que la ha llamado.
+hacemos un programa que imprima la tabla de huecos, imprima su tabla de segmentos, haga un fork imprima la tabla de segmentos del hijo e imprima otra vez los huecos.
+Nos extrañan dos cosas de los resultados:
+1 El segmento de texto esta dos veces en memoria, cosa que no es necesaria puesto que comparten el codigo.
+2 Los dos procesos se meten en el hueco mas grande cuando entraban perfectamente en otros huecos.
+Explicacion del 2: nos confundimos al leer el tamaño del proceso, creimos que el tamaño que reservaban para el proceso era lo que median los datos mas la pila. Pero realmente reserva mas por si la pila y/o los datos crecen. Exactamente 0x219 clicks. Y con este tamaño solo entra en ese hueco.
+Explicacion del 1: con la compilacion normal de c utiliza el mismo segmento para datos que para texto entonces no pueden compartirlo. Si compilamos el programa con la opcion "-i" se separan los dos segmentos y el segmento de datos de ambos procesos apuntan a la misma direccion de momeoria.
