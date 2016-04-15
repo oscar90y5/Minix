@@ -1,0 +1,55 @@
+Grupo numero 8
+Ivan Castaño Fernandez
+Oscar Fernandez Angulo
+
+17/2/16
+modificado el archivo passwd, añadido el nuevo usuario "ivos", nos ha dado bastantes problemas el uso de vi.
+modificado el mensaje de inicio sin problemas.
+el programa a.out nos da fallo al compilar en el archivo de cabecera: "unistd.h"
+Explicacion: no habiamos incluido la cabecera "sys/types.h" (habiamos mirado el man en ubuntu).
+
+24/2/16
+Hemos hecho un esquema de los mensajes utilizados por el SO para hacer una llamada al sistema.
+Localizamos el archivo forkexit.c que es donde se encuentra la funcion "fork()" y añadimos un "printf()" imprimiendo el mensaje: "Creado hijo: (numero de hijo)".
+2/3/16
+Definimos el nombre de la nueva llamada al sistema en la cabecera "callnr.h"
+Añadimos en table, en la posicion 77, el nombre de la funcion (do_esops).
+Definimos la funcion "do_esops()" en el fichero utility.c. Esta funcion imprime el mensaje.
+creamos la funcion do_esops() en el kernel.
+creamos un programa (practicaC.c) desde el que hacemos la llamada esops y comprobamos que el kernel cambia el mensaje. Nos a dado algun problema encontrar la libreria que contiene taskcall().
+Cambiamos la funcion do_esops del gestor de memoria para que dependiendo del campo "m1_i1" del mensaje ejecute una funcion diferente.
+Para el caso "INFPRO", que es una macro definida en callnr.h, hacemos una la llamada ESOPS a SYSTASK
+En el archivo system.c del kernel añadimos los comentarios del tipo de mensaje ESOPS indicando que en el campo m1_i1 del mensaje esta el tipo de "subllamada al sistema" que queremos realizar.
+En el mismo archivo añadimos la funcion correspondiente a INFPRO
+Hacemos que esta funcion imprima la informacion de proc_ptr ERROR: nos imprime la informacion del proceso SYS, porque es el que se esta ejecutando en ese momento, y no el de el proceso que realiza la llamada, que es lo que nos gustaria.
+EXPLICACION:
+Utilizamos bill_ptr en lugar de proc_ptr.
+
+xx/xx/xx
+Leemos los metodos esos locos. Explicaciones: WWGQGEQGQRGQGRVGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG
+
+Escribimos el progra que ejecuta cuatro procesos, tres que se ejecutan durante, aproximadamente, un segundo y otro en diez.
+Se ejecutan primero los tres procesos lijeros y despues el proceso pesado.
+Añadimos en /usr/include/minix/callnr.h la nueva llamada al sistema. CAMBIAQ.
+Añadimos un nuevo caso en /usr/src/mm/utility.c puesto que nosotos tambien hacemos una funcion diferente en el gestor de memoria dependiendo del mensaje mm_in.m1.i1 por si en el futuro una nueva llamada no requiriera llamar al kernell. Aunque en este momento no sea necesario. (REVISAR ESTA MIERDA QUE ESTA ESCRITA CON E CULO).
+Añadido nuevoQ y tal
+Cambiadas todas las asignaciones
+creada la funcion cambiaQ
+Ejecutamos el programa de los cuatro procesos. Observamos que estos finalizan desordenados.
+Cambiamos el cuanto por un numero mu grande.
+Volvemos a ejecutar el progrma anterior y observamos que los procesos se ejecutan en orden y hasta que no finaliza uno no se inicia el siguiente (El conocido efecto comboy).
+/XX/XX/XX
+PRACTICA E
+Incluimos la funcion imprimeHoles en alloc.c en la que recorremos la lista enlazada que comienza en hole_head (NO SE SI SE LLAMA ASI) e imprime el inicio y el tamaño de los agujeros.
+Probamos esta parte reiniciando la maquina y nos salen dos agujeros, estos agujeros siempre salen en el mismo lugar cada vez que reinciamos como era de esperar.
+Buscando la lista de procesos. Encontramos la estructura de la lista de procesos en /usr/src/mm/mproc.h
+Creamos una funcion llamada imprimeTabSeg en main.c
+recorremos la tabla de los procesos y probamos a iprimir el pid de los procesos para ver si funciona.
+Error. No arranca minix :(
+Creamos una funcion llamada imprimeTabSeg en main.c
+recorremos la tabla de los procesos y probamos a iprimir el pid de los procesos para ver si funciona.
+Error. No arranca minix :(
+Explicacion: recorrimos el array has encontrar NIL_MPROC. Esto no se encontraba nunca asique entrabamos en un bucle que no terminaba.
+Conseguimos imprimir la tabla de segmentos de todos los procesos en uso recorriendo el array hasta NR_PROC e imprimimos solo los que tienen "mp_flags" con el valor IN_USE.
+Creamos un programa llamado memLibre.c desde el que haremos una llamada al sistema
+movemos el ejecutable de este programa a la carpeta /usr/local/bin/ para poder ejecutarlo como un comando
