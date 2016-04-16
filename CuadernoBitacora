@@ -3,15 +3,31 @@ Ivan Castaño Fernandez
 Oscar Fernandez Angulo
 
 17/2/16
-modificado el archivo passwd, añadido el nuevo usuario "ivos", nos ha dado bastantes problemas el uso de vi.
-modificado el mensaje de inicio sin problemas.
+PRACTICA A.
+Modificado el archivo passwd, añadido el nuevo usuario "ivos", nos ha dado bastantes problemas el uso de vi.
+Modificado el mensaje de inicio sin problemas.
 el programa a.out nos da fallo al compilar en el archivo de cabecera: "unistd.h"
 Explicacion: no habiamos incluido la cabecera "sys/types.h" (habiamos mirado el man en ubuntu).
 
 24/2/16
 Hemos hecho un esquema de los mensajes utilizados por el SO para hacer una llamada al sistema.
-Localizamos el archivo forkexit.c que es donde se encuentra la funcion "fork()" y añadimos un "printf()" imprimiendo el mensaje: "Creado hijo: (numero de hijo)".
+Pasos que se realizan al hacer fork:
+ENVIAR MENSAJE A MM
+1º Al ejecutar fork se ejecuta la funcion: _syscall(MM,FORK,&m) (en posix/_fork.c). Desde esta funcion se ejecuta _sendrec() y se comprueba si devuelve un mensaje de error o no.
+2º _sendrec(who,msgptr) donde en who se encuentra el destinatario de la funcion (MM) y en msgptr se encuentra el mensaje que se quiere transmitir (&m). En esta funcion escrita en ensamblador se ejecuta:
+	mov eax, SRCDEST(ebp) en la que se mueve el destinatario de la funcion (MM) que se encuentra ocho palabras despues de ebp al registro eax.
+	mov ebx, MESSAGE(ebp) se mueve la direccion del mensage, que se encuentra doce palabras despues de la direccion ebp, al registro ebx.
+	mov ecx, BOTH se guarda la macro BOTH en ecx. Indicando que es una operacion en la que se envia y recive informacion.
+	int SYSVEC se ejecuta la interrupcion de software SYSVEC (la 33).
+3º Esta interrupcion hace que desde /usr/src/kernel/protect.c se ejecute s_call(). Esta funcion ejecuta sys_call() cuyos srgumentos habian sido insertados en la pila.
+4º Esta funcion envia el mensaje al servidor de memoria para indicarle que debe realizar un fork().
+PROCESAR MENSAJE
+El gestor de memoria esta constantemente en esperando un mensaje. Cuando recive uno ejecuta get_work() y busca que funcion tiene que realizar en call_vec[], en nuestro caso call_vec[2].
+
+Localizamos el archivo forkexit.c que es donde se encuentra la funcion "fork()" y añadimos un "printf()" imprimiendo el mensaje: "Creado hijo: (next_pid)".
+
 2/3/16
+PRACTICA C
 Definimos el nombre de la nueva llamada al sistema en la cabecera "callnr.h"
 Añadimos en table, en la posicion 77, el nombre de la funcion (do_esops).
 Definimos la funcion "do_esops()" en el fichero utility.c. Esta funcion imprime el mensaje.
@@ -21,26 +37,39 @@ Cambiamos la funcion do_esops del gestor de memoria para que dependiendo del cam
 Para el caso "INFPRO", que es una macro definida en callnr.h, hacemos una la llamada ESOPS a SYSTASK
 En el archivo system.c del kernel añadimos los comentarios del tipo de mensaje ESOPS indicando que en el campo m1_i1 del mensaje esta el tipo de "subllamada al sistema" que queremos realizar.
 En el mismo archivo añadimos la funcion correspondiente a INFPRO
-Hacemos que esta funcion imprima la informacion de proc_ptr ERROR: nos imprime la informacion del proceso SYS, porque es el que se esta ejecutando en ese momento, y no el de el proceso que realiza la llamada, que es lo que nos gustaria.
-EXPLICACION:
-Utilizamos bill_ptr en lugar de proc_ptr.
+Hacemos que esta funcion imprima la informacion de proc_ptr
+ERROR: nos imprime la informacion del proceso SYS, porque es el que se esta ejecutando en ese momento, y no el de el proceso que realiza la llamada, que es lo que nos gustaria.
 
-xx/xx/xx
-Leemos los metodos esos locos. Explicaciones: WWGQGEQGQRGQGRVGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG
+4/3/16
+EXPLICACION:
+Utilizamos proc_ptr en lugar de bill_ptr.
+
+9/3/16
+PRACTICA D
+pick_proc():
+	Decide quien es el proximo proceso a ejecutarse. Los va buscando en TASK_Q, SERVER_Q, USER_Q en ese orden, dando asi prioridad a los procesos que esten esperando en la cola indexada por TASK_Q.
+ready():
+	Cuando un proceso esta preparado lo mete en una de las tres colas comentadas anteriormente. Elige la cola dependiendo si es un proceso de usuario, una interrupcion...
+unready():
+	Elimina de la cola de listos el proceso que le indiques 
+sched():
+	Se ejecuta cuando se acaba el quantum. Manda el proceso en ejecucion a la cola de listos y entra a ejecutarse el siguiente.
 
 Escribimos el progra que ejecuta cuatro procesos, tres que se ejecutan durante, aproximadamente, un segundo y otro en diez.
 Se ejecutan primero los tres procesos lijeros y despues el proceso pesado.
+
+16/3/16
 Añadimos en /usr/include/minix/callnr.h la nueva llamada al sistema. CAMBIAQ.
-Añadimos un nuevo caso en /usr/src/mm/utility.c puesto que nosotos tambien hacemos una funcion diferente en el gestor de memoria dependiendo del mensaje mm_in.m1.i1 por si en el futuro una nueva llamada no requiriera llamar al kernell. Aunque en este momento no sea necesario. (REVISAR ESTA MIERDA QUE ESTA ESCRITA CON E CULO).
-Añadido nuevoQ y tal
-Cambiadas todas las asignaciones
-creada la funcion cambiaQ
-Ejecutamos el programa de los cuatro procesos. Observamos que estos finalizan desordenados.
-Cambiamos el cuanto por un numero mu grande.
-Volvemos a ejecutar el progrma anterior y observamos que los procesos se ejecutan en orden y hasta que no finaliza uno no se inicia el siguiente (El conocido efecto comboy).
-/XX/XX/XX
+Añadimos un nuevo caso en /usr/src/mm/utility.c puesto que nosotos tambien hacemos una funcion diferente en el gestor de memoria dependiendo del mensaje mm_in.m1.i1, por si en el futuro una nueva llamada no requiriera llamar al kernell. Aunque en este momento no sea necesario.
+Creada la funcion cambiaQ desde la que cambiamos el quantum. Ningun problema puesto que estaba muy detallado como hacerlo.
+Ejecutamos el programa de los cuatro procesos. Observamos que a pesar de que el primer proceso que se ejecuta es el pesado finalizan primero los ligeros.
+Cambiamos el cuanto por un numero suficientemente grande para que nunca finalice. Asi cambiamos el algoritmo de planificacion a FIFO.
+Volvemos a ejecutar el progrma anterior y observamos que los procesos se ejecutan en orden y hasta que no finaliza el proceso pesado no se ejecutan los ligeros. Lo que nos hace esperar mucho por unos procesos que se ejecutan muy rapido. (El conocido efecto comboy).
+Aunque el tiempo en conjunto de ejecucion de los cuatro procesos sea mas rapido con FIFO da la sensacion de que el sistema se queda parado por lo que en nuestra opinion RR es mejor de cara al usuario porque le vas dando respuestas continuadas aunque esto haga perder un poco de tiempo.
+
+12/4/16
 PRACTICA E
-Incluimos la funcion imprimeHoles en alloc.c en la que recorremos la lista enlazada que comienza en hole_head (NO SE SI SE LLAMA ASI) e imprime el inicio y el tamaño de los agujeros.
+Incluimos la funcion imprimeHoles en alloc.c en la que recorremos la lista enlazada que comienza en hole_head e imprime el inicio y el tamaño de los agujeros.
 Probamos esta parte reiniciando la maquina y nos salen dos agujeros, estos agujeros siempre salen en el mismo lugar cada vez que reinciamos como era de esperar.
 Buscando la lista de procesos. Encontramos la estructura de la lista de procesos en /usr/src/mm/mproc.h
 Creamos una funcion llamada imprimeTabSeg en main.c
@@ -55,8 +84,11 @@ En utility.c, donde definimos do_esops incluimos un nuevo caso al switch en el q
 Hacemos un programa en c que haga esta llamada al sistema, 
 Definimos una nueva llamada al sistema (MITABSEG) que imprima la tabla de segmentos del proceso que la ha llamado.
 hacemos un programa que imprima la tabla de huecos, imprima su tabla de segmentos, haga un fork imprima la tabla de segmentos del hijo e imprima otra vez los huecos.
+
 Nos extrañan dos cosas de los resultados:
 1 El segmento de texto esta dos veces en memoria, cosa que no es necesaria puesto que comparten el codigo.
 2 Los dos procesos se meten en el hueco mas grande cuando entraban perfectamente en otros huecos.
+
 Explicacion del 2: nos confundimos al leer el tamaño del proceso, creimos que el tamaño que reservaban para el proceso era lo que median los datos mas la pila. Pero realmente reserva mas por si la pila y/o los datos crecen. Exactamente 0x219 clicks. Y con este tamaño solo entra en ese hueco.
+
 Explicacion del 1: con la compilacion normal de c utiliza el mismo segmento para datos que para texto entonces no pueden compartirlo. Si compilamos el programa con la opcion "-i" se separan los dos segmentos y el segmento de datos de ambos procesos apuntan a la misma direccion de momeoria.
