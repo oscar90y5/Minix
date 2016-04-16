@@ -1,5 +1,5 @@
 Grupo numero 8
-Ivan Castaño Fernandez
+Ivan Casta�o Fernandez
 Oscar Fernandez Angulo
 
 17/2/16
@@ -11,6 +11,7 @@ Explicacion: no habiamos incluido la cabecera "sys/types.h" (habiamos mirado el 
 24/2/16
 Hemos hecho un esquema de los mensajes utilizados por el SO para hacer una llamada al sistema.
 Localizamos el archivo forkexit.c que es donde se encuentra la funcion "fork()" y añadimos un "printf()" imprimiendo el mensaje: "Creado hijo: (numero de hijo)".
+
 2/3/16
 Definimos el nombre de la nueva llamada al sistema en la cabecera "callnr.h"
 Añadimos en table, en la posicion 77, el nombre de la funcion (do_esops).
@@ -38,6 +39,7 @@ creada la funcion cambiaQ
 Ejecutamos el programa de los cuatro procesos. Observamos que estos finalizan desordenados.
 Cambiamos el cuanto por un numero mu grande.
 Volvemos a ejecutar el progrma anterior y observamos que los procesos se ejecutan en orden y hasta que no finaliza uno no se inicia el siguiente (El conocido efecto comboy).
+
 /XX/XX/XX
 PRACTICA E
 Incluimos la funcion imprimeHoles en alloc.c en la que recorremos la lista enlazada que comienza en hole_head (NO SE SI SE LLAMA ASI) e imprime el inicio y el tamaño de los agujeros.
