@@ -10,6 +10,7 @@ el programa a.out nos da fallo al compilar en el archivo de cabecera: "unistd.h"
 Explicacion: no habiamos incluido la cabecera "sys/types.h" (habiamos mirado el man en ubuntu).
 
 24/2/16
+PRACTICA B
 Hemos hecho un esquema de los mensajes utilizados por el SO para hacer una llamada al sistema.
 Pasos que se realizan al hacer fork:
 ENVIAR MENSAJE A MM
