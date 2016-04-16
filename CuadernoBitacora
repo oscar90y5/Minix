@@ -4,6 +4,7 @@ Oscar Fernandez Angulo
 
 17/2/16
 PRACTICA A.
+
 Modificado el archivo passwd, añadido el nuevo usuario "ivos", nos ha dado bastantes problemas el uso de vi.
 Modificado el mensaje de inicio sin problemas.
 el programa a.out nos da fallo al compilar en el archivo de cabecera: "unistd.h"
@@ -11,24 +12,33 @@ Explicacion: no habiamos incluido la cabecera "sys/types.h" (habiamos mirado el 
 
 24/2/16
 PRACTICA B
-Hemos hecho un esquema de los mensajes utilizados por el SO para hacer una llamada al sistema.
+
 Pasos que se realizan al hacer fork:
+
 ENVIAR MENSAJE A MM
+
 1º Al ejecutar fork se ejecuta la funcion: _syscall(MM,FORK,&m) (en posix/_fork.c). Desde esta funcion se ejecuta _sendrec() y se comprueba si devuelve un mensaje de error o no.
+
 2º _sendrec(who,msgptr) donde en who se encuentra el destinatario de la funcion (MM) y en msgptr se encuentra el mensaje que se quiere transmitir (&m). En esta funcion escrita en ensamblador se ejecuta:
 	mov eax, SRCDEST(ebp) en la que se mueve el destinatario de la funcion (MM) que se encuentra ocho palabras despues de ebp al registro eax.
 	mov ebx, MESSAGE(ebp) se mueve la direccion del mensage, que se encuentra doce palabras despues de la direccion ebp, al registro ebx.
 	mov ecx, BOTH se guarda la macro BOTH en ecx. Indicando que es una operacion en la que se envia y recive informacion.
 	int SYSVEC se ejecuta la interrupcion de software SYSVEC (la 33).
+
 3º Esta interrupcion hace que desde /usr/src/kernel/protect.c se ejecute s_call(). Esta funcion ejecuta sys_call() cuyos srgumentos habian sido insertados en la pila.
+
 4º Esta funcion envia el mensaje al servidor de memoria para indicarle que debe realizar un fork().
+
+
 PROCESAR MENSAJE
+
 El gestor de memoria esta constantemente en esperando un mensaje. Cuando recive uno ejecuta get_work() y busca que funcion tiene que realizar en call_vec[], en nuestro caso call_vec[2].
 
 Localizamos el archivo forkexit.c que es donde se encuentra la funcion "fork()" y añadimos un "printf()" imprimiendo el mensaje: "Creado hijo: (next_pid)".
 
 2/3/16
 PRACTICA C
+
 Definimos el nombre de la nueva llamada al sistema en la cabecera "callnr.h"
 Añadimos en table, en la posicion 77, el nombre de la funcion (do_esops).
 Definimos la funcion "do_esops()" en el fichero utility.c. Esta funcion imprime el mensaje.
@@ -47,12 +57,16 @@ Utilizamos proc_ptr en lugar de bill_ptr.
 
 9/3/16
 PRACTICA D
+
 pick_proc():
 	Decide quien es el proximo proceso a ejecutarse. Los va buscando en TASK_Q, SERVER_Q, USER_Q en ese orden, dando asi prioridad a los procesos que esten esperando en la cola indexada por TASK_Q.
+
 ready():
 	Cuando un proceso esta preparado lo mete en una de las tres colas comentadas anteriormente. Elige la cola dependiendo si es un proceso de usuario, una interrupcion...
+
 unready():
-	Elimina de la cola de listos el proceso que le indiques 
+	Elimina de la cola de listos el proceso que le indiques. 
+
 sched():
 	Se ejecuta cuando se acaba el quantum. Manda el proceso en ejecucion a la cola de listos y entra a ejecutarse el siguiente.
 
@@ -70,6 +84,7 @@ Aunque el tiempo en conjunto de ejecucion de los cuatro procesos sea mas rapido 
 
 12/4/16
 PRACTICA E
+
 Incluimos la funcion imprimeHoles en alloc.c en la que recorremos la lista enlazada que comienza en hole_head e imprime el inicio y el tamaño de los agujeros.
 Probamos esta parte reiniciando la maquina y nos salen dos agujeros, estos agujeros siempre salen en el mismo lugar cada vez que reinciamos como era de esperar.
 Buscando la lista de procesos. Encontramos la estructura de la lista de procesos en /usr/src/mm/mproc.h
