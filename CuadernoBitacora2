@@ -1,0 +1,28 @@
+Grupo 8
+Ivan Castaño Fernandez
+Oscar Fernandez Angulo
+
+DEFRAGMENTADOR DE MEMORIA
+
+Lo primero que vamos a intentar es mover un proceso.
+
+Para esto lo primero que vamos a buscar es como se aloja un proceso en memoria.
+Vamos a ver forkexit.c porque es desde donde se crean todos los procesos y segar asi hasta el alojamiento.
+Encontramos una funcion llamada phys_copy() que nos parace que es la que copia un trozo de memoria a otro lugar.
+vamos a hacer un programa que utilize esta funcion y con el comando memLibre comprobaremos si se copio. Miramos dos programas distintos que lo utilizasen para ver que habia que incluir, vimos que solo tenian un include en comun, kernel.h, asique utilizaremos este.
+Vamos a probarlo...
+Como nos da el error de que no esta definido _phys_copy() hemos decidido utilizar sys_copy.
+sys_copy realiza la interrupcion al sistema SYS_COPY desde la que se utiliza phys_copy. En los argumentos ponemos ABS en sr_proc y dst_proc para mover memoria fisica directamente.
+
+
+Hemos encontrado una funcion llamada free_mem(), en /usr/src/mm/alloc.c, que libera la memoria de un proceso e incluye los huecos en la tabla de memoria libre, combinandolos si fuera necesario.
+Estamos buscando como mover el puntero del proceso para que se ejecute en la nueva zona de memoria. estamos buscando en proc.c donde encontramos las funciones que sacan los procesos de la cola de listos y los vuelven a introducir, cosa que utilizaremos antes de mover el proceso para que no cambie el estado mientras se copia.
+Encontramos la tabla de procesos en proc.h
+Vamos a hacer una funcion en usr/src/mm/main.c que cambie el valor de la memoria fisica de cada segmento de un proceso.
+le pasaremos el pid y el desplazamiento (normalmente hacia arriba) y movera estos campos (esto es mas pa mi que otra cosa). Esta funcion tambien debera llamar al kernell y cambiar estos valores de la otra tabla de procesos para que haya consistencia.
+incluimos MOVPROC en /usr/include/minix/callnr.h
+
+18/05/16
+Escribimos un programa que mueva un proceso y que cambie los punteros a ver que ocurre con el proceso.
+Escribimos otro programa que se este ejecutando durante mucho tiempo, este sera el proceso a mover.
+No funciona, panico proceso -2 y su puta madre
