@@ -1,4 +1,4 @@
-Grupo numero 8
+﻿Grupo numero 8
 Ivan Castaño Fernandez
 Oscar Fernandez Angulo
 
@@ -70,7 +70,7 @@ unready():
 sched():
 	Se ejecuta cuando se acaba el quantum. Manda el proceso en ejecucion a la cola de listos y entra a ejecutarse el siguiente.
 
-Escribimos el progra que ejecuta cuatro procesos, tres que se ejecutan durante, aproximadamente, un segundo y otro en diez.
+Escribimos el programa que ejecuta cuatro procesos, tres que se ejecutan durante, aproximadamente, un segundo y otro en diez.
 Se ejecutan primero los tres procesos lijeros y despues el proceso pesado.
 
 16/3/16
