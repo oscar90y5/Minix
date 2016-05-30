@@ -1,0 +1,53 @@
+- src/mm/mm.h : todos los archivos de cabecera que deben ser compilados con el mm.
+
+- glo.h :
+
+	mp : puntero a la entrada de la tabla de procesos
+	who : indice del proceso en curso
+	procs_in_use : numero de entradas de la tabla de procesos
+	core_name : fichero que sera creado si hay algun problema
+	core_ssets: mapa de bits que describen el problema
+
+mproc.h : tabla de procesos del mm
+
+	- la estructura mem_map esta declarada en /usr/include/minix/type.h
+	
+table.c : lo mas importante es el array de punteros a funciones call_vec
+
+main.c : mm_init() :
+
+		- invoca sys_getmap() : uso de memoria del kernel y memoria libre
+
+		- la variable minix_clicks: tamaño de nucleo
+
+		- se inicializa tabla de procesos
+
+		- y se llama a alloc.c:mem_init()
+
+alloc.c : mem_init() :
+
+		- todo el tema de los agujeros...
+
+alloc.c : free_mem(base,clicks) : recibe la direccion base desde donde se quiere liberar memmoria y el numero de clicks a liberar
+
+	- new_ptr : asignacion de un nuevo hueco
+	- free_slots : apunta al siguiente elemento de la lista hole
+	- hole_head : principio de esta lista
+	- merge() : une huecos libres
+
+Fork, exit y wait
+
+src/mm/forkexit.c : funciones do_fork(), mm_exit() y do_waitpid()
+
+	- do_fork() : creacion de nuevo proceso recibe el proceso padre (variable mp)
+		· Comprueba que haya sitio en la tabla de procesos
+		· Obtiene el tamaño del proceso hijo en funcion del tamaño del padre, solo de datos y pila ya que el texto lo comparten. despues se reserva el espacio dentro de hole_head() con la funcion alloc_mem()
+		· Despues se copia el espacio de memoria del padre en el hijo (con sys_copy()) que envia un mensaje a la tarea del sistema. la tarea hace de interfaz entre los procesos servidores y el nucleo. Sys_copy() envia un mensaje a la tarea del sistema que provoca la invocacion de la funcion src/kernel/system.c:do_copy() que realiza una copia entre espacios de memoria de diferentes procesos. el segmento pila a continuacion del de datos.
+		· se busca una entrada libre en la tabla de procesos, se copian los valores del padre, se personalizan los propios del proceso hijo y se encuentra un pid no usado.
+		· por ultimo se informa al servidor de ficheros y al nucleo sobre la creacion del nuevo proceso, es necesario ya que ambos deben actualizar sus propias tablas de gestion de procesos.
+
+src/mm/forkexit.c : mm_exit() y do_waitpid(), libera recursos y espera a la finalizacion de otros procesos.
+
+
+
+
