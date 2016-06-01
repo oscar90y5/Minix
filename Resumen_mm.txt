@@ -102,3 +102,13 @@ direcciones virtual y física, así como la longitud de cada segmento, todo ello e
 1024 bytes. Todos los segmentos ocupan un número entero de clics y empiezan siempre
 en una dirección múltiplo del tamaño del ‘clic’
 
+Otro punto a hacer notar es la llamada a “swap_in”. Esta llamada está vacía si la
+configuración de Minix no incluye “intercambio de memoria”. Pero si Minix se configura
+para incluir todo el fuente con intercambio activado, es aquí donde se realiza la
+comprobación de si un proceso puede ser intercambiado a memoria.
+
+
+CUANDO SE CREA UN PROCESO LA TABLA DE PROCESOS (TP) DEBE SER ACTUALIZADA, LO QUE INCLUYE TAMBIEN TAMBIEN LAS TP'S DEL KERNEL Y GESTOR DE FICHEROS(FS)
+
+en esta pagina explica lo del isstema de ficheros ¬¬: http://www.dia.eui.upm.es/asignatu/Sis_op2/Transparencias/Transparencias%2008-09/2-Gestion%20de%20memoria%20en%20Minix%203.pdf
+
