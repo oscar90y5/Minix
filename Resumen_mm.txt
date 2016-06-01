@@ -46,9 +46,59 @@ src/mm/forkexit.c : funciones do_fork(), mm_exit() y do_waitpid()
 		· se busca una entrada libre en la tabla de procesos, se copian los valores del padre, se personalizan los propios del proceso hijo y se encuentra un pid no usado.
 		· por ultimo se informa al servidor de ficheros y al nucleo sobre la creacion del nuevo proceso, es necesario ya que ambos deben actualizar sus propias tablas de gestion de procesos.
 
-	- mm_exit() : libera recursos
+	- mm_exit() : libera recursos. recibe el puntero al proceso que se va terminar y el estado de salida del padre.
 	- do_waitpid(): espera a la finalizacion de otros procesos.
+	
+
+------------------------------------------------------------------------------I
+
+EXTERN struct proc* pproc_addr[NR_TASKS + NR_PROCS] : Variable externa relacionada con la tabla de procesos para referenciar posiciones de ésta de una forma rapida sin tener que calcular la direccion para una determinada entrada, y se declara tambien en proc.h
+
+cada proceso se divide en dos bloques el del texto que comparte con el papito y los datos y la pilas. ambos bloques pueden ser asignados y/o liberados de forma independiente. Con fork hay que asignarle al hijo el mismo espacio del padre. al finalizar un proceso siempre se libera su bloque de datos y pila.
+
+con la llamada al sistema execve se libera memoria, tambien se puede sacar al proceso de cpu con exit.
+
+Los ficheros ejecutables en disco, aparte del código y datos inicializados, incorporan opcionalmente
+una tabla de símbolos (para depuración), y también, de forma obligatoria, una cabecera con
+información sobre las necesidades de memoria para las distintas partes del proceso, así como de la
+necesidad total de memoria, además de si el uso de espacios I+D es juntos o separados.
+
+En la llamada “fork”, dependiendo de si los espacios I+D son juntos o separados, se asigna
+memoria para el proceso hijo de una forma u otra. Con espacios juntos, la memoria nueva
+asignada constituirá un solo bloque (segmento de Intel), del mismo tamaño que el del padre, el
+cual se corresponde con la memoria total utilizada por el padre, es decir, la suma de los tamaños
+del código, datos, gap y pila. Con espacios separados, se asigna un nuevo bloque para el hijo de
+igual tamaño que el de padre, pero este bloque (segmento) contiene únicamente las áreas de
+datos, gap y pila. El bloque de código (segmento) en cambio, no se asigna, ya que puede ser y es,
+compartido con el padre.
 
 
+En la llamada “execve” se asigna al proceso la cantidad de memoria indicada en la cabecera del
+fichero ejecutable, teniendo en cuenta si los espacios son juntos o separados, tal y como ya se ha
+contado. Hay que tener en cuenta en esta llamada, que si los espacios son separados se complica
+un poco la gestión, ya que al liberar la vieja imagen, tendrá que tenerse en cuenta si el bloque de
+código está siendo compartido por otro proceso, en cuyo caso no se liberaría éste último. Este
+problema no ocurre con espacios juntos, ya que al no haber bloques de código compartidos,
+siempre que se libera la imagen de memoria vieja, se libera de forma completa, ya que ésta
+constituye un único segmento (o bloque).
 
+SIEMPRE antes de liberar un proceso se debe mirar si alguno de sus segmentos puede ser compartido por algun otro proceso
+
+Existe una estructura de datos fundamental para el procesado de los mensajes: La tabla
+“call_vec”, la cual contiene los punteros a los procedimientos que tratan los diferentes
+mensajes.
+Cuando llega un mensaje al Gestor de Procesos (en el bucle principal), se extrae el tipo
+de mensaje y se pone en la variable global “call_nr”. Este valor -el tipo-, se usa como
+índice de la tabla “call_vec” para encontrar el puntero al procedimiento que tratará el
+mensaje recién llegado, para a continuación, hacer una llamada al mismo y ejecutar la
+llamada al Sistema.
+
+Un campo a destacar de la tabla de procesos del G.P. es el vector “mp_seg”, el cual tiene
+tres elementos para expresar los segmentos de código, datos y pila (no confundir el
+término segmento de Minix, que hemos denominado anteriormente ‘bloque’, con el mismo
+término segmento de INTEL). Cada elemento a su vez, es una estructura que contiene las
+direcciones virtual y física, así como la longitud de cada segmento, todo ello expresado en
+‘clics’. El tamaño de un ‘clic’ es dependiente de la implementación, siendo en Minix-3 de
+1024 bytes. Todos los segmentos ocupan un número entero de clics y empiezan siempre
+en una dirección múltiplo del tamaño del ‘clic’
 
