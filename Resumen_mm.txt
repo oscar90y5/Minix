@@ -34,7 +34,7 @@ alloc.c : free_mem(base,clicks) : recibe la direccion base desde donde se quiere
 	- free_slots : apunta al siguiente elemento de la lista hole
 	- hole_head : principio de esta lista
 	- merge() : une huecos libres
-
+cdcd
 Fork, exit y wait
 
 src/mm/forkexit.c : funciones do_fork(), mm_exit() y do_waitpid()
@@ -46,7 +46,8 @@ src/mm/forkexit.c : funciones do_fork(), mm_exit() y do_waitpid()
 		· se busca una entrada libre en la tabla de procesos, se copian los valores del padre, se personalizan los propios del proceso hijo y se encuentra un pid no usado.
 		· por ultimo se informa al servidor de ficheros y al nucleo sobre la creacion del nuevo proceso, es necesario ya que ambos deben actualizar sus propias tablas de gestion de procesos.
 
-src/mm/forkexit.c : mm_exit() y do_waitpid(), libera recursos y espera a la finalizacion de otros procesos.
+	- mm_exit() : libera recursos
+	- do_waitpid(): espera a la finalizacion de otros procesos.
 
 
 
