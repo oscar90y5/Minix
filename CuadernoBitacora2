@@ -1,15 +1,13 @@
-Grupo 8
+﻿Grupo 8
 Ivan Castaño Fernandez
 Oscar Fernandez Angulo
-
-TAREAS: METER FECHAS, AÑADIR UNA CONCLUSION...
 
 DEFRAGMENTADOR DE MEMORIA
 
 Lo primero que vamos a intentar es mover un proceso.
 
 Para esto lo primero que vamos a buscar es como se aloja un proceso en memoria.
-Vamos a ver forkexit.c porque es desde donde se crean todos los procesos y llegar asi hasta el alojamiento.
+Vamos a ver forkexit.c porque es desde donde se crean todos los procesos y segar asi hasta el alojamiento.
 Encontramos una funcion llamada phys_copy() que nos parace que es la que copia un trozo de memoria a otro lugar.
 vamos a hacer un programa que utilize esta funcion y con el comando memLibre comprobaremos si se copio. Miramos dos programas distintos que lo utilizasen para ver que habia que incluir, vimos que solo tenian un include en comun, kernel.h, asique utilizaremos este.
 Vamos a probarlo...
@@ -17,26 +15,21 @@ Como nos da el error de que no esta definido _phys_copy() hemos decidido utiliza
 sys_copy realiza la interrupcion al sistema SYS_COPY desde la que se utiliza phys_copy. En los argumentos ponemos ABS en sr_proc y dst_proc para mover memoria fisica directamente.
 
 
-Hemos encontrado una funcion llamada free_mem(), en /usr/src/mm/alloc.c, que libera la memoria de un proceso e incluye los huecos en la tabla de memoria libre, combinandolos si fuera necesario. Nos sera util despues de haber movido el proceso.
-
+Hemos encontrado una funcion llamada free_mem(), en /usr/src/mm/alloc.c, que libera la memoria de un proceso e incluye los huecos en la tabla de memoria libre, combinandolos si fuera necesario.
 Estamos buscando como mover el puntero del proceso para que se ejecute en la nueva zona de memoria. estamos buscando en proc.c donde encontramos las funciones que sacan los procesos de la cola de listos y los vuelven a introducir, cosa que utilizaremos antes de mover el proceso para que no cambie el estado mientras se copia.
 Encontramos la tabla de procesos en proc.h
 Vamos a hacer una funcion en usr/src/mm/main.c que cambie el valor de la memoria fisica de cada segmento de un proceso.
-le pasaremos el pid y el desplazamiento (normalmente hacia arriba) y movera estos campos. Esta funcion tambien debera llamar al kernell y cambiar estos valores de la otra tabla de procesos para que haya consistencia.
+le pasaremos el pid y el desplazamiento (normalmente hacia arriba) y movera estos campos (esto es mas pa mi que otra cosa). Esta funcion tambien debera llamar al kernell y cambiar estos valores de la otra tabla de procesos para que haya consistencia.
 incluimos MOVPROC en /usr/include/minix/callnr.h
 
 18/05/16
 Escribimos un programa que mueva un proceso y que cambie los punteros a ver que ocurre con el proceso.
 Escribimos otro programa que se este ejecutando durante mucho tiempo, este sera el proceso a mover.
-No funciona, panico proceso -2.
+No funciona, panico proceso -2 y su puta madre
 
-25/05/16
-Nos damos cuenta comentando partes de codigo que el fallo nos da al tocar la lista de procesos del kernell.
-Buscando en funciones que modifiquen la tabla de procesos nos damos cuenta de que la tabla de procesos la cambian desde el gestor de memoria con la funcion new_mem, a la que se le pasa el mapa de memoria y el numero de proceso y actualiza la tabla de procesos del kernell.
+01/06/2016
 
-28/05/16
-Probamos a mover un proceso con el sys_newmap. No pasa nada pero tampoco casca.el fallo debia estar al moveer los punteros en el kernell.
-Se cambian los punteros bien, pero probando a mover los procesos de las terminales (getty) vemos que los punteros se cambian, porque cuando utilizas esa terminal tiene que crear otro proceso nuevo, pero la memoria no se ha modificado, porque el nuevo proceso apunta a la misma direccion. Por lo que el fallo esta en sys_copy, que por alguna razon no hace lo que le estamos pidiendo.
-Ejecutamos sys_copy imprimiendo la respuesta que genera. Nos devuelve "Memory fault - core dumped", cagada.
-Buscando en sys_copy nos damos cuenta que lo que tenemos que introducirle son phys_bytes, pero lo que le metemos son phys_clicks (porque lo copiamos del mapa de memoria que esta en Phys_clicks).
-El fallo esta en que debido a la estructura en capas de minix sys_copy no puede realizar la llamada al kernell desde un proceso de usuario, por l que hay que realizar esta llamada desde el gestor de memoria.
+02/06/2016
+
+Al parecer ahora movemos bien el proceso a una posicion fija, el problema es que aunque le movamos despues de la interrupcion sigue ejecutandose, aunque se supone que deberiamos sacarlo de la cola... 
+Creeemos que puede ser que no estamos actualizando bien la tabla de procesos del kernel

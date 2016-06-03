@@ -1,0 +1,155 @@
+﻿Grupo numero 8
+Ivan Castaño Fernandez
+Oscar Fernandez Angulo
+
+17/2/16
+PRACTICA A.
+
+Modificado el archivo passwd, añadido el nuevo usuario "ivos", nos ha dado bastantes problemas el uso de vi.
+Modificado el mensaje de inicio sin problemas.
+el programa a.out nos da fallo al compilar en el archivo de cabecera: "unistd.h"
+Explicacion: no habiamos incluido la cabecera "sys/types.h" (habiamos mirado el man en ubuntu).
+
+24/2/16
+PRACTICA B
+
+Pasos que se realizan al hacer fork:
+
+ENVIAR MENSAJE A MM
+
+1º Al ejecutar fork se ejecuta la funcion: _syscall(MM,FORK,&m) (en posix/_fork.c). Desde esta funcion se ejecuta _sendrec() y se comprueba si devuelve un mensaje de error o no.
+
+2º _sendrec(who,msgptr) donde en who se encuentra el destinatario de la funcion (MM) y en msgptr se encuentra el mensaje que se quiere transmitir (&m). En esta funcion escrita en ensamblador se ejecuta:
+	mov eax, SRCDEST(ebp) en la que se mueve el destinatario de la funcion (MM) que se encuentra ocho palabras despues de ebp al registro eax.
+	mov ebx, MESSAGE(ebp) se mueve la direccion del mensage, que se encuentra doce palabras despues de la direccion ebp, al registro ebx.
+	mov ecx, BOTH se guarda la macro BOTH en ecx. Indicando que es una operacion en la que se envia y recive informacion.
+	int SYSVEC se ejecuta la interrupcion de software SYSVEC (la 33).
+
+3º Esta interrupcion hace que desde /usr/src/kernel/protect.c se ejecute s_call(). Esta funcion ejecuta sys_call() cuyos srgumentos habian sido insertados en la pila.
+
+4º Esta funcion envia el mensaje al servidor de memoria para indicarle que debe realizar un fork().
+
+
+PROCESAR MENSAJE
+
+El gestor de memoria esta constantemente en esperando un mensaje. Cuando recive uno ejecuta get_work() y busca que funcion tiene que realizar en call_vec[], en nuestro caso call_vec[2].
+
+Localizamos el archivo forkexit.c que es donde se encuentra la funcion "fork()" y añadimos un "printf()" imprimiendo el mensaje: "Creado hijo: (next_pid)".
+
+2/3/16
+PRACTICA C
+
+Definimos el nombre de la nueva llamada al sistema en la cabecera "callnr.h"
+Añadimos en table, en la posicion 77, el nombre de la funcion (do_esops).
+Definimos la funcion "do_esops()" en el fichero utility.c. Esta funcion imprime el mensaje.
+creamos la funcion do_esops() en el kernel.
+creamos un programa (practicaC.c) desde el que hacemos la llamada esops y comprobamos que el kernel cambia el mensaje. Nos a dado algun problema encontrar la libreria que contiene taskcall().
+Cambiamos la funcion do_esops del gestor de memoria para que dependiendo del campo "m1_i1" del mensaje ejecute una funcion diferente.
+Para el caso "INFPRO", que es una macro definida en callnr.h, hacemos una la llamada ESOPS a SYSTASK
+En el archivo system.c del kernel añadimos los comentarios del tipo de mensaje ESOPS indicando que en el campo m1_i1 del mensaje esta el tipo de "subllamada al sistema" que queremos realizar.
+En el mismo archivo añadimos la funcion correspondiente a INFPRO
+Hacemos que esta funcion imprima la informacion de proc_ptr
+ERROR: nos imprime la informacion del proceso SYS, porque es el que se esta ejecutando en ese momento, y no el de el proceso que realiza la llamada, que es lo que nos gustaria.
+
+4/3/16
+EXPLICACION:
+Utilizamos proc_ptr en lugar de bill_ptr.
+
+9/3/16
+PRACTICA D
+
+pick_proc():
+	Decide quien es el proximo proceso a ejecutarse. Los va buscando en TASK_Q, SERVER_Q, USER_Q en ese orden, dando asi prioridad a los procesos que esten esperando en la cola indexada por TASK_Q.
+
+ready():
+	Cuando un proceso esta preparado lo mete en una de las tres colas comentadas anteriormente. Elige la cola dependiendo si es un proceso de usuario, una interrupcion...
+
+unready():
+	Elimina de la cola de listos el proceso que le indiques. 
+
+sched():
+	Se ejecuta cuando se acaba el quantum. Manda el proceso en ejecucion a la cola de listos y entra a ejecutarse el siguiente.
+
+Escribimos el programa que ejecuta cuatro procesos, tres que se ejecutan durante, aproximadamente, un segundo y otro en diez.
+Se ejecutan primero los tres procesos lijeros y despues el proceso pesado.
+
+16/3/16
+Añadimos en /usr/include/minix/callnr.h la nueva llamada al sistema. CAMBIAQ.
+Añadimos un nuevo caso en /usr/src/mm/utility.c puesto que nosotos tambien hacemos una funcion diferente en el gestor de memoria dependiendo del mensaje mm_in.m1.i1, por si en el futuro una nueva llamada no requiriera llamar al kernell. Aunque en este momento no sea necesario.
+Creada la funcion cambiaQ desde la que cambiamos el quantum. Ningun problema puesto que estaba muy detallado como hacerlo.
+Ejecutamos el programa de los cuatro procesos. Observamos que a pesar de que el primer proceso que se ejecuta es el pesado finalizan primero los ligeros.
+Cambiamos el cuanto por un numero suficientemente grande para que nunca finalice. Asi cambiamos el algoritmo de planificacion a FIFO.
+Volvemos a ejecutar el progrma anterior y observamos que los procesos se ejecutan en orden y hasta que no finaliza el proceso pesado no se ejecutan los ligeros. Lo que nos hace esperar mucho por unos procesos que se ejecutan muy rapido. (El conocido efecto comboy).
+Aunque el tiempo en conjunto de ejecucion de los cuatro procesos sea mas rapido con FIFO da la sensacion de que el sistema se queda parado por lo que en nuestra opinion RR es mejor de cara al usuario porque le vas dando respuestas continuadas aunque esto haga perder un poco de tiempo.
+
+12/4/16
+PRACTICA E
+
+Incluimos la funcion imprimeHoles en alloc.c en la que recorremos la lista enlazada que comienza en hole_head e imprime el inicio y el tamaño de los agujeros.
+Probamos esta parte reiniciando la maquina y nos salen dos agujeros, estos agujeros siempre salen en el mismo lugar cada vez que reinciamos como era de esperar.
+Buscando la lista de procesos. Encontramos la estructura de la lista de procesos en /usr/src/mm/mproc.h
+Creamos una funcion llamada imprimeTabSeg en main.c
+recorremos la tabla de los procesos y probamos a iprimir el pid de los procesos para ver si funciona.
+Error. No arranca minix :(
+Explicacion: recorrimos el array has encontrar NIL_MPROC. Esto no se encontraba nunca asique entrabamos en un bucle que no terminaba.
+Conseguimos imprimir la tabla de segmentos de todos los procesos en uso recorriendo el array hasta NR_PROC e imprimimos solo los que tienen "mp_flags" con el valor IN_USE.
+Creamos un programa llamado memLibre.c desde el que haremos una llamada al sistema
+movemos el ejecutable de este programa a la carpeta /usr/local/bin/ para poder ejecutarlo como un comando
+Definimos en callnr.h la nueva llamada al sistema (TABSEG) 
+En utility.c, donde definimos do_esops incluimos un nuevo caso al switch en el que llamara a la funcion imprimeTabVec definida con anterioridad. 
+Hacemos un programa en c que haga esta llamada al sistema, 
+Definimos una nueva llamada al sistema (MITABSEG) que imprima la tabla de segmentos del proceso que la ha llamado.
+hacemos un programa que imprima la tabla de huecos, imprima su tabla de segmentos, haga un fork imprima la tabla de segmentos del hijo e imprima otra vez los huecos.
+
+Nos extrañan dos cosas de los resultados:
+1 El segmento de texto esta dos veces en memoria, cosa que no es necesaria puesto que comparten el codigo.
+2 Los dos procesos se meten en el hueco mas grande cuando entraban perfectamente en otros huecos.
+
+Explicacion del 2: nos confundimos al leer el tamaño del proceso, creimos que el tamaño que reservaban para el proceso era lo que median los datos mas la pila. Pero realmente reserva mas por si la pila y/o los datos crecen. Exactamente 0x219 clicks. Y con este tamaño solo entra en ese hueco.
+
+Explicacion del 1: con la compilacion normal de c utiliza el mismo segmento para datos que para texto entonces no pueden compartirlo. Si compilamos el programa con la opcion "-i" se separan los dos segmentos y el segmento de datos de ambos procesos apuntan a la misma direccion de momeoria.
+
+
+
+
+*/===================================================================================================================\
+*|                                                                                                                   |*                                            
+*|						Desfragmentador de memoria                                           |*
+*|                                                                                                                   |*
+*\===================================================================================================================/*
+
+Lo primero que vamos a intentar es mover un proceso.
+
+Para esto lo primero que vamos a buscar es como se aloja un proceso en memoria.
+Vamos a ver forkexit.c porque es desde donde se crean todos los procesos y llegar asi hasta el alojamiento.
+Encontramos una funcion llamada phys_copy() que nos parace que es la que copia un trozo de memoria a otro lugar.
+Vamos a hacer un programa que utilize esta función y con el comando "memLibre" comprobaremos si se copió. 
+Miramos dos programas distintos que lo utilizásen para ver qué habia que incluir, vimos que solo tenían un include en común, kernel.h, así que utilizaremos este.
+Vamos a probarlo...
+
+Como nos da el error de que no esta definido _phys_copy() hemos decidido utilizar sys_copy.
+sys_copy realiza la interrupción al sistema SYS_COPY desde la que se utiliza phys_copy. 
+En los argumentos son ABS en sr_proc y dst_proc para mover memoria física directamente.
+Hemos encontrado una función llamada free_mem(), en /usr/src/mm/alloc.c, ésta libera la memoria de un proceso e incluye los huecos en la tabla de memoria libre, combinándolos si fuera necesario.
+
+Ahora estamos buscando como mover el puntero del proceso para que se ejecute en la nueva zona de memoria, seguramente esté en proc.c o proc.h. 
+El archivo proc.c es donde encontramos las funciones que sacan los procesos de la cola de listos y los vuelven a introducir. 
+Esto lo utilizaremos antes de mover el proceso para que no cambie el estado mientras le intentamos copiar.
+Al final encontramos la tabla de procesos en proc.h.
+
+Decidimos hacer una función en usr/src/mm/main.c que cambie el valor de la memoria física de cada segmento de un proceso.
+Esta función recibirá el pid y el desplazamiento (normalmente hacia abajo) y moverá estos campos, además también deberá llamar al kernell y cambiar estos valores de la otra tabla de procesos para que haya consistencia.
+Incluimos MOVPROC en /usr/include/minix/callnr.h
+
+
+18/05/16
+Escribimos un programa que mueva un proceso y que cambie los punteros a ver que ocurre con el proceso.
+Escribimos otro programa que se este ejecutando durante mucho tiempo, este será el proceso a mover.
+No funciona, panico proceso -2 y su puta madre
+
+01/06/2016
+
+02/06/2016
+
+Al parecer ahora movemos bien el proceso a una posicion fija, el problema es que aunque le movamos despues de la interrupcion sigue ejecutandose, aunque se supone que deberiamos sacarlo de la cola... 
+Creeemos que puede ser que no estamos actualizando bien la tabla de procesos del kernel
